@@ -29,7 +29,7 @@ public class Translator {
             while ((line = br.readLine()) != null) {
                 //Translate to English
                 System.out.println(line);
-                String translated = GoogleTranslate.translate("fr", "en", line);
+                String translated = GoogleTranslate.translate("en", line);
 
                 System.out.println(translated);
                 holder.append(translated).append("\n");

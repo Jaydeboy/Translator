@@ -100,7 +100,21 @@ public class GoogleTranslate {
         int[] tkk = {0x6337E, 0x217A58DC + 0x5AF91132};
         return tkk;
     }
-
+    /**
+	 * Automatically detects language and translate to the targetLanguage. Allows Google to determine source language
+	 * 
+	 * @see GoogleTranslate#translate(String, String, String)
+	 * @param targetLanguage
+	 *            The language you want to translate into in ISO-639 format
+	 * @param text
+	 *            The text you actually want to translate
+	 * @return The translated text.
+	 * @throws IOException
+	 *             if it cannot complete the request
+	 */
+	public static String translate(String targetLanguage , String text) throws IOException {
+		return translate("auto", targetLanguage, text);
+	}
     /**
      * An implementation of an unsigned right shift. Necessary since Java does
      * not have unsigned ints.
