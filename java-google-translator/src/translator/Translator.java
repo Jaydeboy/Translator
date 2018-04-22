@@ -8,7 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import com.darkprograms.speech.translator.GoogleTranslate;
+import com.darkprograms.speech.translator.GoogleTranslate; 
 public class Translator {
 
     public static void main(String[] args) {
