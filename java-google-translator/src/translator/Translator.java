@@ -35,7 +35,8 @@ public class Translator {
                 holder.append(translated).append("\n");
 
             }
-
+            br.close();
+            
         } catch (IOException e) {
             e.printStackTrace();
         }
