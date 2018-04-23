@@ -47,14 +47,10 @@ public class LambdaFunctionHandler implements RequestHandler<DataModel, DataMode
 			/*calls a static function to detect the language and translate it via google API (com.darkprograms.speech.translator.GoogleTranslate)
 				
 				*/
-			String translated = GoogleTranslate.translate("en",  this.getDecryptedFileData(bucket, key));
+			String translated = GoogleTranslate.translate(sourceLanguage,"en",  this.getDecryptedFileData(bucket, key));
 			this.writeTranslatedFile(bucket, key, translated);
 
-
-			output.setTranslatedKey(translated);
-			output.setTranslatedBucket(translated);
-	
-			/*
+		
 			context.getLogger().log("\nData: " +translated);
 			output.setConfidence(input.getConfidence());
 			output.setDecryptedBucket(input.getDecryptedBucket());
@@ -63,7 +59,7 @@ public class LambdaFunctionHandler implements RequestHandler<DataModel, DataMode
 			output.setSourceLanguage(input.getSourceLanguage());
 			output.setTranslatedBucket(input.getDecryptedBucket());
 			output.setTranslatedKey(input.getDecryptedKey());
-			*/
+		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
