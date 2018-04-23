@@ -1,5 +1,7 @@
 package edu.psu.ist440.team2.translator;
 
+import java.io.Serializable;
+
 /**
  * DataModel contains the metadata associated with decrypting then translating a
  * file.
@@ -11,7 +13,12 @@ package edu.psu.ist440.team2.translator;
  * @author j6r
  *
  */
-public class DataModel {
+public class DataModel implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/** The name of the decryption method used */
 	private String method;
@@ -88,6 +95,13 @@ public class DataModel {
 
 	public void setTranslatedKey(String translatedKey) {
 		this.translatedKey = translatedKey;
+	}
+
+	@Override
+	public String toString() {
+		return "DataModel [method=" + method + ", confidence=" + confidence + ", decryptedBucket=" + decryptedBucket
+				+ ", decryptedKey=" + decryptedKey + ", sourceLanguage=" + sourceLanguage + ", translatedBucket="
+				+ translatedBucket + ", translatedKey=" + translatedKey + "]";
 	}
 
 }
