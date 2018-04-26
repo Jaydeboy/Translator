@@ -1,8 +1,5 @@
 package edu.psu.ist440.team2.translator;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -10,15 +7,17 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.util.StringUtils;
 import com.darkprograms.speech.translator.GoogleTranslate; // repository of classes to connect to the google translation API
 
 /**
@@ -28,59 +27,68 @@ import com.darkprograms.speech.translator.GoogleTranslate; // repository of clas
 public class LambdaFunctionHandler implements RequestHandler<DataModel, DataModel> {
 
 	StringBuilder sb = new StringBuilder();
-	
 
 	@Override
 	public DataModel handleRequest(DataModel input, Context context) {
 		context.getLogger().log("Input: " + input);
-		DataModel output = new DataModel(); 
+		DataModel output = new DataModel();
 		// the holder for the translated data- text
-		
-
 		try {
-			//retrieves the current bucket containing the text
+			// validate the input
+			if (StringUtils.isNullOrEmpty(input.getDecryptedBucket())) {
+				throw new IOException("Invalid Bucket name!");
+			}
+			if (StringUtils.isNullOrEmpty(input.getDecryptedKey())) {
+				throw new IOException("Invalid Key name!");
+			}
+			// retrieves the current bucket containing the text
 			String bucket = input.getDecryptedBucket();
-			//decryption key - name of file
+			// decryption key - name of file
 			String key = input.getDecryptedKey();
-			//targeted language used
+			// targeted language used
+			StringBuilder newKey = new StringBuilder(key);
+			newKey.append("_translated");
 			String sourceLanguage = input.getSourceLanguage();
-			/*calls a static function to detect the language and translate it via google API (com.darkprograms.speech.translator.GoogleTranslate)
-				
-				*/
-			String translated = GoogleTranslate.translate(sourceLanguage,"en",  this.getDecryptedFileData(bucket, key));
-			this.writeTranslatedFile(bucket, key, translated);
+			/*
+			 * calls a static function to detect the language and translate it via google
+			 * API (com.darkprograms.speech.translator.GoogleTranslate)
+			 * 
+			 */
 
-		
-			context.getLogger().log("\nData: " +translated);
+			String translated = GoogleTranslate.translate("en", this.getFileData(bucket, key));
+			this.writeTranslatedFile(bucket, newKey.toString(), translated);
+
+			// OUTPUT
+			context.getLogger().log("\nData: " + translated);
 			output.setConfidence(input.getConfidence());
 			output.setDecryptedBucket(input.getDecryptedBucket());
 			output.setDecryptedKey(input.getDecryptedKey());
 			output.setMethod(input.getMethod());
 			output.setSourceLanguage(input.getSourceLanguage());
 			output.setTranslatedBucket(input.getDecryptedBucket());
-			output.setTranslatedKey(input.getDecryptedKey());
-		
+			output.setTranslatedKey(newKey.toString());
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		context.getLogger().log("Output: " + output);
-		return input;
+		context.getLogger().log("\nOutput: " + output);
+		return output;
 	}
 
 	/**
-	 * Gets the text of the decrypted source file
+	 * Gets the text of the source file
 	 * 
 	 * @param bucket
-	 *            name of the S3 bucket containing the decrypted file
+	 *            name of the S3 bucket containing the file
 	 * @param key
-	 *            name of the decrypted file
+	 *            name of the file
 	 * @return decrypted data as a string
 	 * @throws IOException
 	 *             if the decrypted data file cannot be read
 	 */
-	protected String getDecryptedFileData(String bucket, String key) throws IOException {
+	protected String getFileData(String bucket, String key) throws IOException {
 		AmazonS3 s3client = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
 		GetObjectRequest getRequest = new GetObjectRequest(bucket, key);
 		S3Object s3obj = s3client.getObject(getRequest);
@@ -126,7 +134,8 @@ public class LambdaFunctionHandler implements RequestHandler<DataModel, DataMode
 		metadata.setContentLength(dataByteArray.length);
 
 		AmazonS3 s3client = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_1).build();
-		PutObjectRequest putRequest = new PutObjectRequest(bucket, key, in, metadata);
+		PutObjectRequest putRequest = new PutObjectRequest(bucket, key, in, metadata)
+				.withCannedAcl(CannedAccessControlList.PublicRead);
 		s3client.putObject(putRequest);
 	}
 }
